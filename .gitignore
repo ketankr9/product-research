@@ -38,3 +38,4 @@ ENV/
 # Research Outputs
 research_results/
 *.log
+.qwen/
