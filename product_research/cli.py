@@ -595,10 +595,9 @@ def research(query: Optional[str], output: Optional[str], model: Optional[str], 
     # Set converter
     if converter == "html2text":
         tools.DEFAULT_MARKDOWN_CONVERTER = MarkdownConverter.HTML2TEXT
-        console.print("[dim]Using html2text for markdown conversion[/dim]")
     else:
         tools.DEFAULT_MARKDOWN_CONVERTER = MarkdownConverter.MARKDOWNIFY
-        console.print("[dim]Using markdownify for markdown conversion[/dim]")
+
 
     if low_end_model:
         console.print(f"[dim]Using low-end model={low_end_model}[/dim]")
@@ -725,10 +724,9 @@ def chat(model: Optional[str] = None, model_provider: Optional[str] = None, low_
     # Set converter
     if converter == "html2text":
         tools.DEFAULT_MARKDOWN_CONVERTER = MarkdownConverter.HTML2TEXT
-        console.print("[dim]Using html2text for markdown conversion[/dim]")
     else:
         tools.DEFAULT_MARKDOWN_CONVERTER = MarkdownConverter.MARKDOWNIFY
-        console.print("[dim]Using markdownify for markdown conversion[/dim]")
+
 
     if low_end_model:
         console.print(f"[dim]Using low-end model={low_end_model}[/dim]")
