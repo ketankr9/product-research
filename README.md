@@ -9,13 +9,19 @@ A powerful product research agent built with LangChain and Tavily.
    python -m venv .venv
    source .venv/bin/activate
    pip install -e .
-   # Create a .env file and add your API keys
+   # Fill in your API keys in .env file.
+   if [ ! -f .env ]; then
+       cp .env.example .env
+   fi
    ```
 
 2. **Run Research**:
    ```bash
    # Single research query
    ./research.sh "best smartphone under 30k"
+
+   # With local model.
+   ./research.sh --model-provider="local" "best smartphone under 30k"
 
    # Interactive chat mode
    python -m product_research.cli chat
