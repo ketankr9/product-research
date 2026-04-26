@@ -58,7 +58,7 @@ PRODUCT_RESEARCHER_PROMPT = """You are a product research analyst. You find, com
 
 # Research Scope
 - General queries (e.g. "best budget laptops"): research exactly {item_limit} products.
-- Specific model queries (e.g. "realme GT 7T"): research at most 3 products.
+- Specific model queries (e.g. "realme GT 7T"): research at most 3 products (item_limit=3).
 
 # Phase 1 — Discovery
 Use these tools to find candidates:

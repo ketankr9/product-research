@@ -2,7 +2,15 @@
 
 A powerful product research agent built with LangChain and Tavily.
 
-## Quick Start
+## Installation
+
+You can install the Product Research Agent by running the following command:
+
+```bash
+curl -LsSf https://raw.githubusercontent.com/ketankr9/product-research/master/install.sh | bash
+```
+
+Alternatively, you can set it up manually:
 
 1. **Setup Environment**:
    ```bash

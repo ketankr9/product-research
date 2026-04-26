@@ -680,7 +680,7 @@ def research(query: Optional[str], output: Optional[str], model: Optional[str], 
 @click.option("--low-end-model", "-lm", default=None, help="Low-end model (worker)")
 @click.option("--target", "-t", type=click.Choice(["amazon", "web"]), default="amazon",
               help="Search target (amazon.in or general web)")
-@click.option("--items", "-n", default=5, type=int,
+@click.option("--items", "-n", default=10, type=int,
               help="Number of products to research")
 @click.option("--converter", type=click.Choice(["markdownify", "html2text"]), default="markdownify",
               help="HTML to Markdown converter")
