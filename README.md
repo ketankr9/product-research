@@ -32,7 +32,7 @@ Alternatively, you can set it up manually:
    ./research.sh --model-provider="local" "best smartphone under 30k"
 
    # Interactive chat mode
-   python -m product_research.cli chat
+   ./chat.sh
    ```
 
 ## Key Features

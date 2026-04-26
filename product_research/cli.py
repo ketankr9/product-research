@@ -251,14 +251,14 @@ class ResearchSession:
                     
                     assistant_title = f"[bold green]Assistant ({assistant_timestamp})[/bold green]"
                     
-                    if not live_response:
+                    if not live_response and display_response.strip():
                         live_response = Live(
                             Panel(Markdown(display_response), title=assistant_title, border_style="green"),
                             console=console,
                             refresh_per_second=10,
                         )
                         live_response.start()
-                    else:
+                    elif live_response:
                         live_response.update(Panel(Markdown(display_response), title=assistant_title, border_style="green"))
 
                 elif event_type == "tool_call":
@@ -416,15 +416,17 @@ class ResearchSession:
 
                      display_name = f"{product_title} ({asin})" if product_title else asin
                      
-                     price_match = re.search(r"PRICE: (₹[\d,]+|Not found)", section)
+                     price_match = re.search(r"PRICE: (₹[\d,.]+[\w]*|Not found)", section)
                      price = price_match.group(1) if price_match else ""
                      
                      # Extract details section
                      details = section.split("DETAILS:")[1] if "DETAILS:" in section else section
                      
                      renderables = []
-                     if price:
+                     if price and price != "Not found":
                          renderables.append(f"[bold green]{price}[/bold green]")
+                     elif price == "Not found":
+                         renderables.append("[dim]Price not found[/dim]")
                      renderables.append(Markdown(details.strip()))
                      
                      # Ensure display name is not too long for the title
@@ -471,14 +473,22 @@ class ResearchSession:
                         ai_parts = parts[1].split("---", 1)
                         ai_summary = ai_parts[0].strip()
                         
-                        final_content += f"### 🤖 Amazon AI Summary\n{ai_summary}\n\n-----\n"
+                        if ai_summary:
+                            final_content += f"### 🤖 Amazon AI Summary\n{ai_summary}\n\n"
                         
                         if len(ai_parts) > 1:
                             user_reviews = ai_parts[1].strip()
                             if user_reviews:
+                                if final_content:
+                                    final_content += "---\n"
                                 final_content += f"### 👤 User Critical Reviews\n{user_reviews}"
                     else:
-                        final_content = raw_reviews
+                        # Clean up raw reviews if they exist
+                        cleaned_reviews = raw_reviews.strip()
+                        if cleaned_reviews:
+                            final_content = f"### 👤 User Critical Reviews\n{cleaned_reviews}"
+                        else:
+                            final_content = "No reviews found."
 
                     # Ensure display name is not too long for the title
                     if len(display_name) > 80:
@@ -573,9 +583,11 @@ def research(query: Optional[str], output: Optional[str], model: Optional[str], 
     If QUERY is omitted, enters interactive mode.
     """
     # Validate API keys
-    if not os.getenv("TAVILY_API_KEY"):
-        console.print("[red]Error:[/red] TAVILY_API_KEY environment variable is required")
+    if target == "web" and not os.getenv("TAVILY_API_KEY"):
+        console.print("[red]Error:[/red] TAVILY_API_KEY environment variable is required for web target")
         sys.exit(1)
+    elif not os.getenv("TAVILY_API_KEY"):
+        console.print("[yellow]Warning:[/yellow] TAVILY_API_KEY not set. Web search features will be disabled.")
     
     # Resolve models
     resolved_model, resolved_provider = _resolve_model_config(model, model_provider)
@@ -691,9 +703,11 @@ def chat(model: Optional[str] = None, model_provider: Optional[str] = None, low_
     follow-up questions about previous research.
     """
     # Validate API keys
-    if not os.getenv("TAVILY_API_KEY"):
-        console.print("[red]Error:[/red] TAVILY_API_KEY environment variable is required")
+    if target == "web" and not os.getenv("TAVILY_API_KEY"):
+        console.print("[red]Error:[/red] TAVILY_API_KEY environment variable is required for web target")
         sys.exit(1)
+    elif not os.getenv("TAVILY_API_KEY"):
+        console.print("[yellow]Warning:[/yellow] TAVILY_API_KEY not set. Web search features will be disabled.")
     
     # Resolve models
     resolved_model, resolved_provider = _resolve_model_config(model, model_provider)
@@ -800,10 +814,10 @@ def check():
     # Check Tavily (always required)
     if tavily_key:
         masked = tavily_key[:4] + "..." + tavily_key[-4:] if len(tavily_key) > 8 else "****"
-        console.print(f"[green]✓[/green] TAVILY_API_KEY: {masked} (Required for web search)")
+        console.print(f"[green]✓[/green] TAVILY_API_KEY: {masked} (Optional, used for web search)")
         tavily_ok = True
     else:
-        console.print(f"[red]✗[/red] TAVILY_API_KEY: Not set (Required for web search)")
+        console.print(f"[dim]○[/dim] TAVILY_API_KEY: Not set (Optional, used for web search)")
         tavily_ok = False
 
     # Check LLM provider
@@ -826,16 +840,18 @@ def check():
     console.print(f"[dim]○[/dim] Local Models: Available via --model-provider google")
 
     console.print()
-    if tavily_ok and llm_any_ok:
+    if llm_any_ok:
         console.print("[green]✓ Key environment variables are set![/green]")
+        if not tavily_ok:
+            console.print("[yellow]! TAVILY_API_KEY is missing; web search will be disabled.[/yellow]")
         console.print("\n[dim]You can now run:[/dim]")
         console.print("  ./run.sh chat")
         console.print("  ./run.sh research 'hand steamer'")
     else:
-        console.print("[yellow]! Some environment variables are missing.[/yellow]")
-        console.print("\n[dim]Set them in your shell or .env file if needed:[/dim]")
-        console.print("  export TAVILY_API_KEY=your_key_here")
+        console.print("[red]✗ No LLM provider API keys found.[/red]")
+        console.print("\n[dim]Please set at least one of these:[/dim]")
         console.print("  export GOOGLE_API_KEY=your_key_here")
+        console.print("  export ANTHROPIC_API_KEY=your_key_here")
 
 
 def main():

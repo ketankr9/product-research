@@ -25,7 +25,7 @@ def _get_tavily_client():
     if _tavily_client is None:
         TAVILY_API_KEY = os.getenv("TAVILY_API_KEY")
         if not TAVILY_API_KEY:
-            raise ValueError("TAVILY_API_KEY environment variable is required")
+            return None
         from tavily import TavilyClient
         _tavily_client = TavilyClient(api_key=TAVILY_API_KEY)
     return _tavily_client
@@ -40,6 +40,8 @@ def tavily_search_sync(
     """Synchronous web search for Tavily."""
     scraper = WebScraper()
     tavily_client = _get_tavily_client()
+    if not tavily_client:
+        return "Search failed: TAVILY_API_KEY not set. Web search is disabled."
 
     try:
         search_results = tavily_client.search(
@@ -314,9 +316,14 @@ def fetch_product_info_batch(asins: List[str]) -> str:
             if len(content) > 25000:
                 print(f"Content for ASIN: {target_asin} is too long at {len(center_col_md)} of center_col_md and {len(reviews_md)} or reviews characters. Truncating to 25000 characters.")
                 
-            return f"### PRODUCT_INFO: {product_title} ({target_asin})\nPRICE: ₹{extracted_price}\nDETAILS:\n{content[:25000]}\n"
+            # Ensure price doesn't have double currency symbol if already present
+            price_str = str(extracted_price).strip()
+            if price_str != "Not found" and not price_str.startswith("₹"):
+                price_str = f"₹{price_str}"
+                
+            return f"### PRODUCT_INFO: {product_title} ({target_asin})\nPRICE: {price_str}\nDETAILS:\n{content[:25000]}\n"
         except Exception as e:
-            return f"### Product Info for ASIN: {target_asin}\nFailed: {e}\n"
+            return f"### PRODUCT_INFO_FAILED: {target_asin}\nException: {e}\n"
 
     for asin in asins:
         results.append(_get_info(asin))
