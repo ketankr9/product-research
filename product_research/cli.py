@@ -507,7 +507,13 @@ class ResearchSession:
         history_dir = self.output_dir / "research_history"
         history_dir.mkdir(parents=True, exist_ok=True)
         
-        filename = f"research_{self.research_count:03d}.md"
+        # Create a safe filename from the query
+        safe_query = re.sub(r'[^a-z0-9]+', '_', query.lower()).strip('_')
+        # Limit length of query part in filename
+        if len(safe_query) > 50:
+            safe_query = safe_query[:50].strip('_')
+            
+        filename = f"{self.research_count}_{safe_query}.md"
         filepath = history_dir / filename
         
         target_name = "Amazon" if self.target == "amazon" else "Web"
