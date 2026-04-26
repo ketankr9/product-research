@@ -11,7 +11,7 @@ Use these tools to find candidates:
 - `query`: Extract the core product noun/keyword only. Never pass the user's raw sentence.
   ✓ "smartphone"  ✗ "best smartphone under 20000"
 - `url_params`: List of filter strings. You are FORBIDDEN from inventing new params. Use ONLY from this list:
-  - `&high-price=20000` (where 20000 is the max price limit for budget constraints)
+  - `&high-price=20000` (where 20000 is max price). If you use this, also add `&s=price-desc-rank` to sort price high-to-low.
 
 **tavily_search(query)**
 - Use descriptive queries with "reviews" appended. Example: "best 4k tv india 2026 reviews"
