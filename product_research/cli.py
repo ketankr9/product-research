@@ -397,111 +397,98 @@ class ResearchSession:
                 pass
         
         elif tool_name == "fetch_product_info":
-             # Product info is often long markdown, but we can make it nicer
-             content = str(output)
-             if "### Product Info for" in content:
-                 sections = content.split("===PRODUCT_SECTION===")
-                 for section in sections:
-                     if not section.strip(): continue
-                     # Try parsing new standardized format
-                     title_match = re.search(r"### PRODUCT_INFO: (.*?) \(([A-Z0-9]{10})\)", section)
-                     if title_match:
-                         product_title = title_match.group(1)
-                         asin = title_match.group(2)
-                     else:
-                         # Fallback
-                         asin_match = re.search(r"([A-Z0-9]{10})", section)
-                         asin = asin_match.group(1) if asin_match else "Unknown"
-                         product_title = self.asin_to_title.get(asin, "")
-
-                     display_name = f"{product_title} ({asin})" if product_title else asin
-                     
-                     price_match = re.search(r"PRICE: (₹[\d,.]+[\w]*|Not found)", section)
-                     price = price_match.group(1) if price_match else ""
-                     
-                     # Extract details section
-                     details = section.split("DETAILS:")[1] if "DETAILS:" in section else section
-                     
-                     renderables = []
-                     if price and price != "Not found":
-                         renderables.append(f"[bold green]{price}[/bold green]")
-                     elif price == "Not found":
-                         renderables.append("[dim]Price not found[/dim]")
-                     renderables.append(Markdown(details.strip()))
-                     
-                     # Ensure display name is not too long for the title
-                     if len(display_name) > 80:
-                         display_name = display_name[:77] + "..."
-                     
-                     console.print(Panel(
-                         Group(*renderables), 
-                         title=f"📦 {display_name}", 
-                         border_style="blue",
-                         padding=(0, 1),
-                         expand=False
-                     ))
+             try:
+                 products = json.loads(str(output))
+                 if isinstance(products, list):
+                     for product in products:
+                         asin = product.get("asin", "Unknown")
+                         if "error" in product:
+                             console.print(f"[red]Error fetching info for {asin}: {product['error']}[/red]")
+                             continue
+                         
+                         product_title = product.get("title", "")
+                         if not product_title:
+                             product_title = self.asin_to_title.get(asin, "")
+                             
+                         display_name = f"{product_title} ({asin})" if product_title else asin
+                         price = product.get("price", "Not found")
+                         details = product.get("details", "")
+                         
+                         renderables = []
+                         if price and price != "Not found":
+                             renderables.append(f"[bold green]{price}[/bold green]")
+                         elif price == "Not found":
+                             renderables.append("[dim]Price not found[/dim]")
+                         
+                         if details:
+                             renderables.append(Markdown(details.strip()))
+                         
+                         if len(display_name) > 80:
+                             display_name = display_name[:77] + "..."
+                         
+                         console.print(Panel(
+                             Group(*renderables), 
+                             title=f"📦 {display_name}", 
+                             border_style="blue",
+                             padding=(0, 1),
+                             expand=False
+                         ))
                  return
+             except Exception:
+                 pass
 
         elif tool_name == "fetch_reviews":
-            content = str(output)
-            if "### PRODUCT_REVIEWS" in content:
-                sections = content.split("===PRODUCT_SECTION===")
-                for section in sections:
-                    if not section.strip(): continue
-                    
-                    # Try parsing new standardized format
-                    title_match = re.search(r"### PRODUCT_REVIEWS: (.*?) \(([A-Z0-9]{10})\)", section)
-                    if title_match:
-                        product_title = title_match.group(1)
-                        asin = title_match.group(2)
-                    else:
-                        # Fallback
-                        asin_match = re.search(r"([A-Z0-9]{10})", section)
-                        asin = asin_match.group(1) if asin_match else "Unknown"
-                        product_title = self.asin_to_title.get(asin, "")
-
-                    display_name = f"{product_title} ({asin})" if product_title else asin
-                    
-                    # Extract content after REVIEWS:
-                    raw_reviews = section.split("REVIEWS:")[1] if "REVIEWS:" in section else section
-
-                    # Distinguish AI Summary vs User Reviews
-                    final_content = ""
-                    if "### Amazon AI Summary" in raw_reviews:
-                        parts = raw_reviews.split("### Amazon AI Summary")
-                        # parts[1] starts with the AI summary content, then --- then user reviews
-                        ai_parts = parts[1].split("---", 1)
-                        ai_summary = ai_parts[0].strip()
+            try:
+                products = json.loads(str(output))
+                if isinstance(products, list):
+                    for product in products:
+                        asin = product.get("asin", "Unknown")
+                        if "error" in product:
+                            console.print(f"[red]Error fetching reviews for {asin}: {product['error']}[/red]")
+                            continue
+                            
+                        product_title = product.get("title", "")
+                        if not product_title:
+                            product_title = self.asin_to_title.get(asin, "")
+                            
+                        display_name = f"{product_title} ({asin})" if product_title else asin
+                        raw_reviews = product.get("reviews", "")
                         
-                        if ai_summary:
-                            final_content += f"### 🤖 Amazon AI Summary\n{ai_summary}\n\n"
-                        
-                        if len(ai_parts) > 1:
-                            user_reviews = ai_parts[1].strip()
-                            if user_reviews:
-                                if final_content:
-                                    final_content += "---\n"
-                                final_content += f"### 👤 User Critical Reviews\n{user_reviews}"
-                    else:
-                        # Clean up raw reviews if they exist
-                        cleaned_reviews = raw_reviews.strip()
-                        if cleaned_reviews:
-                            final_content = f"### 👤 User Critical Reviews\n{cleaned_reviews}"
+                        final_content = ""
+                        if "### Amazon AI Summary" in raw_reviews:
+                            parts = raw_reviews.split("### Amazon AI Summary")
+                            ai_parts = parts[1].split("***", 1)
+                            ai_summary = ai_parts[0].strip()
+                            
+                            if ai_summary:
+                                final_content += f"### 🤖 Amazon AI Summary\n{ai_summary}\n"
+                            
+                            if len(ai_parts) > 1:
+                                user_reviews = ai_parts[1].strip()
+                                if user_reviews:
+                                    if final_content:
+                                        final_content += "\n***\n"
+                                    final_content += f"### 👤 User Critical Reviews\n{user_reviews}"
                         else:
-                            final_content = "No reviews found."
+                            cleaned_reviews = raw_reviews.strip()
+                            if cleaned_reviews:
+                                final_content = f"### 👤 User Critical Reviews\n{cleaned_reviews}"
+                            else:
+                                final_content = "No reviews found."
 
-                    # Ensure display name is not too long for the title
-                    if len(display_name) > 80:
-                        display_name = display_name[:77] + "..."
+                        if len(display_name) > 80:
+                            display_name = display_name[:77] + "..."
 
-                    console.print(Panel(
-                        Markdown(final_content),
-                        title=f"⭐ {display_name}",
-                        border_style="yellow",
-                        padding=(0, 1),
-                        expand=False
-                    ))
+                        console.print(Panel(
+                            Markdown(final_content),
+                            title=f"⭐ {display_name}",
+                            border_style="yellow",
+                            padding=(0, 1),
+                            expand=False
+                        ))
                 return
+            except Exception:
+                pass
 
         # Default rendering for other tools or fallback
         preview = str(output).strip()
@@ -517,8 +504,11 @@ class ResearchSession:
 
     def _save_result(self, query: str, response: str):
         """Save research result to file."""
+        history_dir = self.output_dir / "research_history"
+        history_dir.mkdir(parents=True, exist_ok=True)
+        
         filename = f"research_{self.research_count:03d}.md"
-        filepath = self.output_dir / filename
+        filepath = history_dir / filename
         
         target_name = "Amazon" if self.target == "amazon" else "Web"
         content = f"""# {target_name} Product Research #{self.research_count}
@@ -775,13 +765,19 @@ def chat(model: Optional[str] = None, model_provider: Optional[str] = None, low_
                 continue
             
             if user_input.lower() == "/save":
+                history_dir = Path.cwd() / "research_history"
+                history_dir.mkdir(parents=True, exist_ok=True)
+                
                 filename = f"chat_session_{session.research_count:03d}.md"
+                filepath = history_dir / filename
+                
                 content = "# Chat Session\n\n"
                 for msg in session.messages:
                     role = "User" if isinstance(msg, HumanMessage) else "Assistant"
                     content += f"## {role}\n{msg.content}\n\n"
-                Path(filename).write_text(content)
-                console.print(f"[dim]Saved to {filename}[/dim]")
+                
+                filepath.write_text(content)
+                console.print(f"[dim]Saved to [link=file://{filepath.resolve()}]{filepath}[/link][/dim]")
                 continue
             
             if not user_input.strip():

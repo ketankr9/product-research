@@ -90,7 +90,7 @@ class AmazonReviewScraper:
             body_node = element.find("div", {"class": "review-text-content"})
             body = body_node.get_text(strip=True) if body_node else "No Body"
             
-            review_text += f"---\n**{title}**\n{body}\n\n"
+            review_text += f"***\n**{title}**\n{body}\n"
             
         return {"title": product_title, "reviews": review_text}
 
@@ -136,7 +136,7 @@ class AmazonReviewScraper:
             body_node = element.find("span", {"data-hook": "review-body"})
             body = body_node.get_text(strip=True) if body_node else "No Body"
             
-            review_text += f"---\n**{title}** ({rating})\n{body}\n\n"
+            review_text += f"***\n**{title}** ({rating})\n{body}\n"
             
         return review_text
 

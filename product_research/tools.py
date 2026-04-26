@@ -321,14 +321,23 @@ def fetch_product_info_batch(asins: List[str]) -> str:
             if price_str != "Not found" and not price_str.startswith("₹"):
                 price_str = f"₹{price_str}"
                 
-            return f"### PRODUCT_INFO: {product_title} ({target_asin})\nPRICE: {price_str}\nDETAILS:\n{content[:25000]}\n"
+            return {
+                "asin": target_asin,
+                "title": product_title,
+                "price": price_str,
+                "details": content[:25000]
+            }
         except Exception as e:
-            return f"### PRODUCT_INFO_FAILED: {target_asin}\nException: {e}\n"
+            return {
+                "asin": target_asin,
+                "error": str(e)
+            }
 
     for asin in asins:
         results.append(_get_info(asin))
         
-    return "\n===PRODUCT_SECTION===\n".join(results)
+    import json
+    return json.dumps(results, indent=2)
 
 
 fetch_product_info = StructuredTool.from_function(
@@ -374,14 +383,22 @@ def fetch_reviews_batch(asins: List[str]) -> str:
                 product_title = product_title[:147] + "..."
             reviews_text = reviews_data.get("reviews")
             
-            return f"### PRODUCT_REVIEWS: {product_title} ({target_asin})\nREVIEWS:\n{reviews_text}\n"
+            return {
+                "asin": target_asin,
+                "title": product_title,
+                "reviews": reviews_text
+            }
         except Exception as e:
-            return f"### PRODUCT_REVIEWS_FAILED: {target_asin}\nException: {e}\n"
+            return {
+                "asin": target_asin,
+                "error": str(e)
+            }
 
     for asin in asins:
         results.append(_get_reviews(asin))
         
-    return "\n===PRODUCT_SECTION===\n".join(results)
+    import json
+    return json.dumps(results, indent=2)
 
 
 fetch_reviews = StructuredTool.from_function(
