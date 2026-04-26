@@ -90,7 +90,7 @@ def amazon_direct_search_sync(
     url_params: List[str] = None,
     max_results: int = 10,
 ) -> str:
-    """Sync Amazon search."""
+    """Search products on Amazon.in. Forbidden from inventing url_params. Use only approved ones like '&high-price=20000'."""
     import urllib.parse
     from bs4 import BeautifulSoup
 
@@ -232,7 +232,7 @@ def amazon_direct_search_sync(
 amazon_direct_search = StructuredTool.from_function(
     func=amazon_direct_search_sync,
     name="amazon_direct_search",
-    description="Search for products directly on Amazon.in. Returns up to 10 most relevant ASINs and titles."
+    description="Search for products on Amazon.in. Forbidden from inventing url_params. Allowed: '&high-price=20000'."
 )
 
 
