@@ -3,14 +3,14 @@ requires = ["setuptools>=61.0", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "deepagents"
+name = "product_research"
 version = "0.1.0"
-description = "Product Research Agent using LangChain Deep Agents"
+description = "Product Research Agent using LangChain DeepAgents"
 readme = "README.md"
 requires-python = ">=3.11"
 license = {text = "MIT"}
 authors = [
-    {name = "Research Agent", email = "ketankr9@gmail.com"}
+    {name = "Utsav Krishnan", email = "ketankr9@gmail.com"}
 ]
 dependencies = [
     "deepagents>=0.5.3",
