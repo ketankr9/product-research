@@ -148,11 +148,14 @@ def _resolve_model_config(
     # Decide provider
     actual_provider = model_provider
     if not actual_provider:
-        # Fallback to available API keys
+        # Fallback to available API keys/URLs in order of priority:
+        # 1. Anthropic, 2. Google, 3. Local
         if os.getenv("ANTHROPIC_API_KEY"):
             actual_provider = "anthropic"
         elif os.getenv("GOOGLE_API_KEY"):
             actual_provider = "google"
+        elif os.getenv("LOCAL_URL"):
+            actual_provider = "local"
         else:
             # Default fallback
             actual_provider = "google"
@@ -592,8 +595,11 @@ def research(query: Optional[str], output: Optional[str], model: Optional[str], 
     if resolved_provider == "anthropic" and not os.getenv("ANTHROPIC_API_KEY"):
         console.print("[red]Error:[/red] ANTHROPIC_API_KEY is required for 'anthropic' provider")
         sys.exit(1)
-    elif resolved_provider in ("gemini", "google") and not os.getenv("GOOGLE_API_KEY"):
+    elif resolved_provider in ("gemini", "google", "google_genai") and not os.getenv("GOOGLE_API_KEY"):
         console.print("[red]Error:[/red] GOOGLE_API_KEY is required for Gemini provider")
+        sys.exit(1)
+    elif resolved_provider == "local" and not os.getenv("LOCAL_URL"):
+        console.print("[red]Error:[/red] LOCAL_URL is required for 'local' provider")
         sys.exit(1)
 
     output_dir = Path(output) if output else Path.cwd()
@@ -712,8 +718,11 @@ def chat(model: Optional[str] = None, model_provider: Optional[str] = None, low_
     if resolved_provider == "anthropic" and not os.getenv("ANTHROPIC_API_KEY"):
         console.print("[red]Error:[/red] ANTHROPIC_API_KEY is required for 'anthropic' provider")
         sys.exit(1)
-    elif resolved_provider in ("google_genai", "gemini") and not os.getenv("GOOGLE_API_KEY"):
+    elif resolved_provider in ("google_genai", "gemini", "google") and not os.getenv("GOOGLE_API_KEY"):
         console.print("[red]Error:[/red] GOOGLE_API_KEY is required for Gemini provider")
+        sys.exit(1)
+    elif resolved_provider == "local" and not os.getenv("LOCAL_URL"):
+        console.print("[red]Error:[/red] LOCAL_URL is required for 'local' provider")
         sys.exit(1)
     
     target_name = "Amazon" if target == "amazon" else "Web"

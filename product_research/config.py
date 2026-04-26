@@ -23,6 +23,7 @@ class Config:
     DEFAULT_GOOGLE_MODEL: str = os.getenv("DEFAULT_GOOGLE_MODEL", "gemini-flash-lite-latest")
     DEFAULT_ANTHROPIC_MODEL: str = os.getenv("DEFAULT_ANTHROPIC_MODEL", "claude-sonnet-4-5-20250929")
     DEFAULT_LOCAL_MODEL: str = os.getenv("DEFAULT_LOCAL_MODEL", "")
+    LOCAL_URL: str = os.getenv("LOCAL_URL", "http://localhost:1234/v1")
     
     # Agent Configuration
     MAX_CONCURRENT_RESEARCH_UNITS: int = 3
